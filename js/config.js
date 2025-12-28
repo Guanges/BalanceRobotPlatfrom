@@ -24,7 +24,7 @@ class Config {
     this.webrtcConfig = {
       iceServers: [
             {
-              urls: 'turn:relay1.expressturn.com:3480', username: '000000002071711344', credential: 'JW+ECRKpe+faXK5gAhiy0uz8B3A=' },
+              urls: 'turn:standard.relay.metered.ca:80', username: '0c6cf9177867b6fcb5434334', credential: 'Kgtwh9w5U6ZvT0AQ' },
         { urls: 'stun:stun1.l.google.com:19302' }
       ],
       sdpSemantics: 'unified-plan'
