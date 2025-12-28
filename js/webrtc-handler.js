@@ -149,19 +149,23 @@ class WebRTCManager {
 
 
 
-async waitForIceGatheringComplete(pc) {
-    if (pc.iceGatheringState === 'complete') return;
+    async waitForIceGatheringComplete(pc, timeout = 3000) {
+        if (pc.iceGatheringState === 'complete') return;
 
-    await new Promise(resolve => {
-        const check = () => {
-            if (pc.iceGatheringState === 'complete') {
-                pc.removeEventListener('icegatheringstatechange', check);
-                resolve();
-            }
-        };
-        pc.addEventListener('icegatheringstatechange', check);
-    });
-}
+        await Promise.race([
+            new Promise(resolve => {
+                const check = () => {
+                    if (pc.iceGatheringState === 'complete') {
+                        pc.removeEventListener('icegatheringstatechange', check);
+                        resolve();
+                    }
+                };
+                pc.addEventListener('icegatheringstatechange', check);
+            }),
+            new Promise(resolve => setTimeout(resolve, timeout))
+        ]);
+    }
+
 
   /**
    * Creates an answer for the WebRTC connection.
