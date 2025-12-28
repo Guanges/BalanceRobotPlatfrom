@@ -43,7 +43,10 @@ class WebRTCManager {
     
     // Create new peer connection
     this.peerConnection = new RTCPeerConnection(this.config);
-    
+      console.log(
+          'ICE servers actually used:',
+          this.peerConnection.getConfiguration().iceServers
+      );
     this.peerConnection.ontrack = (event) => {
       // Handle remote stream
       this.remoteStream = event.streams[0];
