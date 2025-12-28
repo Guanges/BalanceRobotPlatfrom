@@ -22,9 +22,26 @@ class Config {
     
     // Default WebRTC configuration
     this.webrtcConfig = {
-      iceServers: [
-            { urls: 'turn:standard.relay.metered.ca:80', username: '0c6cf9177867b6fcb5434334', credential: 'Kgtwh9w5U6ZvT0AQ' }
-      ]
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+
+            {
+                urls: 'turn:standard.relay.metered.ca:80',
+                username: '0c6cf9177867b6fcb5434334',
+                credential: 'Kgtwh9w5U6ZvT0AQ'
+            },
+            {
+                urls: 'turn:standard.relay.metered.ca:443?transport=tcp',
+                username: '0c6cf9177867b6fcb5434334',
+                credential: 'Kgtwh9w5U6ZvT0AQ'
+            },
+            {
+                urls: 'turns:standard.relay.metered.ca:443',
+                username: '0c6cf9177867b6fcb5434334',
+                credential: 'Kgtwh9w5U6ZvT0AQ'
+            }
+        ],
+      sdpSemantics: 'unified-plan'
     };
     
     // Default topic for device status updates
