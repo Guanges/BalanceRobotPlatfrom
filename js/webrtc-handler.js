@@ -259,7 +259,11 @@ class WebRTCManager {
   /**
    * Stops all communication with the device.
    */
-  stopCommunication() {
+    stopCommunication() {
+        this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
+            type: 'stoptalk',
+            userid: '23435'
+        }, "response/" + deviceId);
     // Close peer connection
     if (this.peerConnection) {
       this.peerConnection.close();
