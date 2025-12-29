@@ -244,7 +244,7 @@ class UIManager {
    */
   stopCommunication(deviceId) {
     console.log(`Stopping communication with device: ${deviceId}`);
-    this.webRTCManager.stopCommunication();
+      this.webRTCManager.stopCommunication(deviceId);
     
     // Remove video preview if it exists
     if (this.currentVideoElement) {
