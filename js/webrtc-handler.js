@@ -39,7 +39,7 @@ class WebRTCManager {
     this.currentDeviceId = deviceId;
     
     // Close any existing connection
-    this.stopCommunication();
+      this.stopCommunication(deviceId);
     
     // Create new peer connection
     this.peerConnection = new RTCPeerConnection(this.config);
