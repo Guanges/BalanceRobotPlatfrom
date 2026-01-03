@@ -45,7 +45,8 @@ class WebRTCManager {
           this.peerConnection.getConfiguration().iceServers
       );
     this.peerConnection.ontrack = (event) => {
-      // Handle remote stream
+        // Handle remote stream
+      console.log('Track kind:', event.track.kind); // 应该是 'video'
       this.remoteStream = event.streams[0];
       if (this.onRemoteStreamReceived) {
         this.onRemoteStreamReceived(this.remoteStream);
