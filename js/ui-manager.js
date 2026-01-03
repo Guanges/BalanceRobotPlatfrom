@@ -167,24 +167,25 @@ class UIManager {
     }
     
     // Remove existing video element if present
-    if (this.currentVideoElement) {
-      this.currentVideoElement.remove();
-    }
-    
-    // Create new video element
-    const videoElement = document.createElement('video');
-    videoElement.id = 'video-preview';
-    videoElement.className = 'video-preview-element';
-    videoElement.autoplay = true;
-    videoElement.playsInline = true;
-    videoElement.muted = false;
-    
-    // Set the stream as the video source
-    videoElement.srcObject = stream;
-    
-    // Add to container
-    this.videoPreviewContainer.appendChild(videoElement);
-    this.currentVideoElement = videoElement;
+      if (this.currentVideoElement) {
+          this.currentVideoElement.srcObject = stream;
+      }
+      else {
+          // Create new video element
+          const videoElement = document.createElement('video');
+          videoElement.id = 'video-preview';
+          videoElement.className = 'video-preview-element';
+          videoElement.autoplay = true;
+          videoElement.playsinline = true;
+          videoElement.muted = true;
+
+          // Set the stream as the video source
+          videoElement.srcObject = stream;
+
+          // Add to container
+          this.videoPreviewContainer.appendChild(videoElement);
+          this.currentVideoElement = videoElement;
+      }
   }
 
   /**
