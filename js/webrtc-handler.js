@@ -218,7 +218,7 @@ class WebRTCManager {
       
       // Send startvideo command to device via MQTT
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
-            type: 'starttalk',
+            type: 'startvideo',
             userid: '23435'
         }, "response/" + deviceId);
       // Create offer for video connection
