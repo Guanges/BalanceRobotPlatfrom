@@ -176,9 +176,10 @@ class UIManager {
           videoElement.id = 'video-preview';
           videoElement.className = 'video-preview-element';
           videoElement.autoplay = true;
-          videoElement.playsinline = true;
+          videoElement.controls = true;
           videoElement.muted = true;
-
+          videoElement.setAttribute('playsinline', '');
+          videoElement.playsInline = true;
           // Set the stream as the video source
           videoElement.srcObject = stream;
 
