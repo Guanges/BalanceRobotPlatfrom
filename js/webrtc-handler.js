@@ -59,7 +59,7 @@ class WebRTCManager {
       console.log('Track kind:', event.track.kind); // 应该是 'video'
       this.remoteStreamVideo = event.streams[0];
       if (this.onRemoteStreamVideoReceived) {
-        this.onRemoteStreamReceived(this.remoteStreamVideo);
+        this.onRemoteStreamVideoReceived(this.remoteStreamVideo);
       }
     };
     
@@ -88,7 +88,7 @@ class WebRTCManager {
             console.log('Track kind:', event.track.kind); // 应该是 'video'
             this.remoteStreamTalk = event.streams[0];
             if (this.onRemoteStreamAudioReceived) {
-                this.onRemoteStreamReceived(this.remoteStreamTalk);
+                this.onRemoteStreamAudioReceived(this.remoteStreamTalk);
             }
         };
 
