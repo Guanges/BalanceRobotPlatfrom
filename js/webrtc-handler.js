@@ -15,56 +15,94 @@ class WebRTCManager {
   constructor(mqttClient, config) {
     this.mqttClient = mqttClient;
     this.config = config;
-    this.peerConnection = null;
-    this.localStream = null;
-    this.remoteStream = null;
+    this.peerConnectionVideo = null;
+    this.peerConnectionTalk = null;
+    this.localStreamTalk = null;
+    this.remoteStreamTalk = null;
+    this.remoteStreamVideo = null;
     this.currentDeviceId = null;
     this.isVideoActive = false;
     this.isVoiceActive = false;
-    this.onRemoteStreamReceived = null; // Callback for when remote stream is available
+    this.onRemoteStreamVideoReceived = null; // Callback for when remote stream is available
+    this.onRemoteStreamAudioReceived = null; // Callback for when remote stream is available
     this.onConnectionStateChange = null; // Callback for connection state changes
 
     // Bind event handlers
-    this.handleWebRTCSignal = this.handleWebRTCSignal.bind(this);
+    this.handleWebRTCSignalTalk = this.handleWebRTCSignalTalk.bind(this);
+    this.handleWebRTCSignalVideo = this.handleWebRTCSignalVideo.bind(this);
     
     // Set up MQTT client callback for WebRTC signaling
-    this.mqttClient.onWebRTCSignal = this.handleWebRTCSignal;
+    this.mqttClient.onWebRTCSignalAudio = this.handleWebRTCSignalTalk;
+    this.mqttClient.onWebRTCSignalVideo = this.handleWebRTCSignalVideo;
+    this.uuid = this.generateUUID();
   }
 
+    generateUUID() {
+        // Generate a simple UUID for identifying the client
+        return Math.random().toString(16).slice(2);
+    }
   /**
    * Initializes a WebRTC connection with a device.
    * @param {string} deviceId The ID of the device to connect to.
    */
-  initializeConnection(deviceId) {
+  initializeVideoConnection(deviceId) {
     this.currentDeviceId = deviceId;
     
     // Create new peer connection
-    this.peerConnection = new RTCPeerConnection(this.config);
+      this.peerConnectionVideo = new RTCPeerConnection(this.config);
       console.log(
           'ICE servers actually used:',
-          this.peerConnection.getConfiguration().iceServers
+          this.peerConnectionVideo.getConfiguration().iceServers
       );
-    this.peerConnection.ontrack = (event) => {
+      this.peerConnectionVideo.ontrack = (event) => {
         // Handle remote stream
       console.log('Track kind:', event.track.kind); // 应该是 'video'
-      this.remoteStream = event.streams[0];
-      if (this.onRemoteStreamReceived) {
-        this.onRemoteStreamReceived(this.remoteStream);
+      this.remoteStreamVideo = event.streams[0];
+      if (this.onRemoteStreamVideoReceived) {
+        this.onRemoteStreamReceived(this.remoteStreamVideo);
       }
     };
     
-    this.peerConnection.onconnectionstatechange = () => {
+      this.peerConnectionVideo.onconnectionstatechange = () => {
       if (this.onConnectionStateChange) {
-        this.onConnectionStateChange(this.peerConnection.connectionState);
+          this.onConnectionStateChange(this.peerConnectionVideo.connectionState);
       }
-      console.log('WebRTC connection state changed:', this.peerConnection.connectionState);
+          console.log('WebRTC connection state changed:', this.peerConnectionVideo.connectionState);
     };
     
-    this.peerConnection.oniceconnectionstatechange = () => {
-      console.log('WebRTC ICE connection state changed:', this.peerConnection.iceConnectionState);
+      this.peerConnectionVideo.oniceconnectionstatechange = () => {
+          console.log('WebRTC ICE connection state changed:', this.peerConnectionVideo.iceConnectionState);
     };
   }
+  initializeAudioConnection(deviceId) {
+        this.currentDeviceId = deviceId;
 
+        // Create new peer connection
+        this.peerConnectionTalk = new RTCPeerConnection(this.config);
+        console.log(
+            'ICE servers actually used:',
+            this.peerConnectionTalk.getConfiguration().iceServers
+        );
+      this.peerConnectionTalk.ontrack = (event) => {
+            // Handle remote stream
+            console.log('Track kind:', event.track.kind); // 应该是 'video'
+            this.remoteStreamTalk = event.streams[0];
+            if (this.onRemoteStreamAudioReceived) {
+                this.onRemoteStreamReceived(this.remoteStreamTalk);
+            }
+        };
+
+      this.peerConnectionTalk.onconnectionstatechange = () => {
+            if (this.onConnectionStateChange) {
+                this.onConnectionStateChange(this.peerConnectionTalk.connectionState);
+            }
+          console.log('WebRTC connection state changed:', this.peerConnectionTalk.connectionState);
+        };
+
+      this.peerConnectionTalk.oniceconnectionstatechange = () => {
+            console.log('WebRTC ICE connection state changed:', this.peerConnectionTalk.iceConnectionState);
+        };
+    }
   /**
    * Creates an offer for the WebRTC connection.
    * @param {string} deviceId The ID of the device to connect to.
@@ -99,34 +137,27 @@ class WebRTCManager {
    * @param {string} deviceId The ID of the device sending the offer.
    * @param {Object} offer The offer object containing SDP.
    */
-    async handleOffer(deviceId, offer) {
+    async handleOfferVideo(deviceId, offer) {
         try {
-            if (!this.peerConnection) {
-                this.initializeConnection(deviceId);
+            if (!this.peerConnectionVideo) {
+                this.initializeVideoConnection(deviceId);
             }
 
             // ⭐ 1️⃣ 先 setRemoteDescription（非常关键）
-            await this.peerConnection.setRemoteDescription(
+            await this.peerConnectionVideo.setRemoteDescription(
                 new RTCSessionDescription(offer)
             );
 
-            // ⭐ 2️⃣ 再获取并添加本地音频
-            this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            this.localStream.getTracks().forEach(track => {
-                this.peerConnection.addTrack(track, this.localStream);
-            });
-
             // ⭐ 3️⃣ 创建 answer
-            const answer = await this.peerConnection.createAnswer();
+            const answer = await this.peerConnectionVideo.createAnswer();
 
             // ⭐ 4️⃣ setLocalDescription
-            await this.peerConnection.setLocalDescription(answer);
+            await this.peerConnectionVideo.setLocalDescription(answer);
 
             // ⭐ 5️⃣ 等 ICE gathering 完成
-            await this.waitForIceGatheringComplete(this.peerConnection);
+            await this.waitForIceGatheringComplete(this.peerConnectionVideo);
 
-            const fullAnswer = this.peerConnection.localDescription;
+            const fullAnswer = this.peerConnectionVideo.localDescription;
 
             console.log('Answer SDP:', fullAnswer.sdp); // 🔍 必须看到 a=candidate
 
@@ -135,17 +166,61 @@ class WebRTCManager {
                 deviceId,
                 {
                     type: 'answer',
-                    userid: '23435',
+                    userid: this.uuid,
                     sdp: fullAnswer.sdp
                 },
-                `response/${deviceId}`
+                `response/video/${deviceId}`
             );
         } catch (error) {
             console.error('Error handling WebRTC offer:', error);
         }
     }
 
+    async handleOfferAudio(deviceId, offer) {
+        try {
+            if (!this.peerConnectionTalk) {
+                this.initializeAudioConnection(deviceId);
+            }
 
+            // ⭐ 1️⃣ 先 setRemoteDescription（非常关键）
+            await this.peerConnectionTalk.setRemoteDescription(
+                new RTCSessionDescription(offer)
+            );
+
+            // ⭐ 2️⃣ 再获取并添加本地音频
+            this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            this.localStream.getTracks().forEach(track => {
+                this.peerConnectionTalk.addTrack(track, this.localStream);
+            });
+
+            // ⭐ 3️⃣ 创建 answer
+            const answer = await this.peerConnectionTalk.createAnswer();
+
+            // ⭐ 4️⃣ setLocalDescription
+            await this.peerConnectionTalk.setLocalDescription(answer);
+
+            // ⭐ 5️⃣ 等 ICE gathering 完成
+            await this.waitForIceGatheringComplete(this.peerConnectionTalk);
+
+            const fullAnswer = this.peerConnectionTalk.localDescription;
+
+            console.log('Answer SDP:', fullAnswer.sdp); // 🔍 必须看到 a=candidate
+
+            // ⭐ 6️⃣ 发送完整 SDP
+            this.mqttClient.sendWebRTCSignalWithResponseTopic(
+                deviceId,
+                {
+                    type: 'answer',
+                    userid: this.uuid,
+                    sdp: fullAnswer.sdp
+                },
+                `response/audio/${deviceId}`
+            );
+        } catch (error) {
+            console.error('Error handling WebRTC offer:', error);
+        }
+    }
 
     async waitForIceGatheringComplete(pc, timeout = 3000) {
         if (pc.iceGatheringState === 'complete') return;
@@ -220,8 +295,8 @@ class WebRTCManager {
       // Send startvideo command to device via MQTT
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'startvideo',
-            userid: '23435'
-        }, "response/" + deviceId);
+            userid: this.uuid
+        }, "response/video/" + deviceId);
       // Create offer for video connection
       //await this.createOffer(deviceId);
     } catch (error) {
@@ -243,8 +318,8 @@ class WebRTCManager {
       // Send starttalk command to device via MQTT
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'starttalk',
-            userid: '23435'
-        }, "response/" + deviceId);
+            userid: this.uuid
+        }, "response/audio/" + deviceId);
       
       // Create offer for voice connection
       //await this.createOffer(deviceId);
@@ -257,42 +332,57 @@ class WebRTCManager {
   /**
    * Stops all communication with the device.
    */
-    stopCommunication(deviceId) {
+    stopVideoCommunication(deviceId) {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
-            type: 'stoptalk',
-            userid: '23435'
-        }, "response/" + deviceId);
+            type: 'stopvideo',
+            userid: this.uuid
+        }, "response/video/" + deviceId);
     // Close peer connection
-    if (this.peerConnection) {
-      this.peerConnection.close();
-      this.peerConnection = null;
-    }
-    
-    // Stop local stream tracks
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
-      this.localStream = null;
+    if (this.peerConnectionVideo) {
+        this.peerConnectionVideo.close();
+        this.peerConnectionVideo = null;
     }
     
     // Clear remote stream
-    this.remoteStream = null;
-    
-    // Reset flags
-    this.isVideoActive = false;
-    this.isVoiceActive = false;
-    this.currentDeviceId = null;
+    this.remoteStreamVideo = null;
   }
+
+    stopAudioCommunication(deviceId) {
+        this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
+            type: 'stoptalk',
+            userid: this.uuid
+        }, "response/audio/" + deviceId);
+        // Close peer connection
+        if (this.peerConnectionTalk) {
+            this.peerConnectionTalk.close();
+            this.peerConnectionTalk = null;
+        }
+
+        // Stop local stream tracks
+        if (this.localStream) {
+            this.localStream.getTracks().forEach(track => track.stop());
+            this.localStream = null;
+        }
+
+        // Clear remote stream
+        this.remoteStreamAudio = null;
+
+        // Reset flags
+        this.isVideoActive = false;
+        this.isVoiceActive = false;
+        this.currentDeviceId = null;
+    }
 
   /**
    * Handles incoming WebRTC signaling messages from MQTT.
    * @param {string} deviceId The ID of the device sending the signal.
    * @param {Object} signalData The signaling data.
    */
-  async handleWebRTCSignal(deviceId, signalData) {
+  async handleWebRTCSignalVideo(deviceId, signalData) {
     try {
       switch (signalData.type) {
         case 'offer':
-          await this.handleOffer(deviceId, signalData);
+          await this.handleOfferVideo(deviceId, signalData);
           break;
         case 'answer':
           await this.handleAnswer(deviceId, signalData);
@@ -310,6 +400,27 @@ class WebRTCManager {
     }
   }
 
+    async handleWebRTCSignalTalk(deviceId, signalData) {
+        try {
+            switch (signalData.type) {
+                case 'offer':
+                    await this.handleOfferAudio(deviceId, signalData);
+                    break;
+                case 'answer':
+                    await this.handleAnswer(deviceId, signalData);
+                    break;
+                case 'ice-candidate':
+                    if (this.peerConnection) {
+                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(signalData.candidate));
+                    }
+                    break;
+                default:
+                    console.warn('Unknown WebRTC signal type:', signalData.type);
+            }
+        } catch (error) {
+            console.error('Error handling WebRTC signal:', error);
+        }
+    }
   /**
    * Adds a local stream to the peer connection.
    * @param {MediaStream} stream The local stream to add.

@@ -18,16 +18,18 @@ class UIManager {
     this.deviceListContainer = null;
     this.videoPreviewContainer = null;
     this.currentVideoElement = null;
+    this.currentAudioElement = null;
     
     // Bind event handlers
     this.handleDeviceListUpdate = this.handleDeviceListUpdate.bind(this);
     this.handleDeviceStatusUpdate = this.handleDeviceStatusUpdate.bind(this);
-    this.handleRemoteStreamReceived = this.handleRemoteStreamReceived.bind(this);
-    
+    this.handleRemoteStreamVideoReceived = this.handleRemoteStreamVideoReceived.bind(this);
+    this.handleRemoteStreamAudioReceived = this.handleRemoteStreamAudioReceived.bind(this);
     // Set up callbacks
     this.mqttClient.onDeviceListUpdate = this.handleDeviceListUpdate;
     this.mqttClient.onDeviceStatusUpdate = this.handleDeviceStatusUpdate;
-    this.webRTCManager.onRemoteStreamReceived = this.handleRemoteStreamReceived;
+    this.webRTCManager.onRemoteStreamVideoReceived = this.handleRemoteStreamVideoReceived;
+    this.webRTCManager.onRemoteStreamAudioReceived = this.handleRemoteStreamAudioReceived;
   }
 
   /**
@@ -90,8 +92,9 @@ class UIManager {
         <p class="card-text">ID: ${device.id}</p>
         <div class="device-controls">
           <button class="btn btn-primary btn-sm start-video-btn" data-device-id="${device.id}">Start Video Preview</button>
+          <button class="btn btn-warning btn-sm stop-video-btn" data-device-id="${device.id}">Stop Video</button>
           <button class="btn btn-success btn-sm start-talk-btn" data-device-id="${device.id}">Start Voice Talk</button>
-          <button class="btn btn-warning btn-sm stop-btn" data-device-id="${device.id}">Stop</button>
+          <button class="btn btn-warning btn-sm stop-talk-btn" data-device-id="${device.id}">Stop Talk</button>
           <div class="device-actions mt-2">
             <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="light_on">Light On</button>
             <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="light_off">Light Off</button>
@@ -143,9 +146,13 @@ class UIManager {
         this.startVoiceTalk(deviceId);
       }
       // Handle stop button
-      else if (target.classList.contains('stop-btn')) {
+      else if (target.classList.contains('stop-video-btn')) {
         const deviceId = target.getAttribute('data-device-id');
-        this.stopCommunication(deviceId);
+        this.stopVideoCommunication(deviceId);
+      }
+      else if (target.classList.contains('stop-talk-btn')) {
+          const deviceId = target.getAttribute('data-device-id');
+          this.stopAudioCommunication(deviceId);
       }
       // Handle action buttons
       else if (target.classList.contains('action-btn')) {
@@ -189,6 +196,27 @@ class UIManager {
       }
   }
 
+    showAudioPlay(stream) {
+
+        // Remove existing video element if present
+        if (this.currentAudioElement) {
+            this.currentAudioElement.srcObject = stream;
+        }
+        else {
+            // Create new video element
+            const videoElement = document.createElement('audio');
+            videoElement.id = 'video-preview';
+            videoElement.className = 'video-preview-element';
+            videoElement.autoplay = true;
+            videoElement.muted = false;
+            videoElement.setAttribute('playsinline', '');
+            videoElement.playsInline = true;
+            // Set the stream as the video source
+            videoElement.srcObject = stream;
+            this.currentVideoElement = videoElement;
+        }
+    }
+
   /**
    * Updates the UI based on current state.
    */
@@ -218,10 +246,13 @@ class UIManager {
    * Handles remote stream received events from WebRTC manager.
    * @param {MediaStream} stream The received remote stream.
    */
-  handleRemoteStreamReceived(stream) {
+  handleRemoteStreamVideoReceived(stream) {
     this.showVideoPreview(stream);
   }
 
+    handleRemoteStreamAudioReceived(stream) {
+        this.showAudioPlay(stream);
+    }
   /**
    * Starts video preview for a specific device.
    * @param {string} deviceId The ID of the device to start video preview for.
@@ -244,9 +275,9 @@ class UIManager {
    * Stops all communication with a specific device.
    * @param {string} deviceId The ID of the device to stop communication with.
    */
-  stopCommunication(deviceId) {
+  stopVideoCommunication(deviceId) {
     console.log(`Stopping communication with device: ${deviceId}`);
-      this.webRTCManager.stopCommunication(deviceId);
+      this.webRTCManager.stopVideoCommunication(deviceId);
     
     // Remove video preview if it exists
     if (this.currentVideoElement) {
@@ -254,6 +285,17 @@ class UIManager {
       this.currentVideoElement = null;
     }
   }
+
+    stopAudioCommunication(deviceId) {
+        console.log(`Stopping communication with device: ${deviceId}`);
+        this.webRTCManager.stopAudioCommunication(deviceId);
+
+        // Remove video preview if it exists
+        if (this.currentAudioElement) {
+            this.currentAudioElement.remove();
+            this.currentAudioElement = null;
+        }
+    }
 
   /**
    * Sends a control command to a specific device.

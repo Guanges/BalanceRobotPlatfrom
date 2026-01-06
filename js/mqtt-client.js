@@ -19,7 +19,8 @@ class MQTTClient {
     this.deviceMap = new Map(); // For quick device lookup by ID
     this.onDeviceListUpdate = null; // Callback for device list updates
     this.onDeviceStatusUpdate = null; // Callback for device status updates
-    this.onWebRTCSignal = null; // Callback for WebRTC signaling messages
+    this.onWebRTCSignalAudio = null; // Callback for WebRTC signaling messages
+    this.onWebRTCSignalVideo = null; // Callback for WebRTC signaling messages
   }
 
   /**
@@ -257,18 +258,25 @@ class MQTTClient {
    * @param {string} message The signaling message.
    */
   handleWebRTCSignal(topic, message) {
-    try {
-      const signalData = JSON.parse(message);
-      
-      // Extract device ID from topic
-      const topicParts = topic.split('/');
-      const deviceId = topicParts[1]; // Assuming format: response/{deviceId}
-      
-      // Notify listeners of WebRTC signal
-      if (this.onWebRTCSignal) {
-        this.onWebRTCSignal(deviceId, signalData);
-      }
-      
+      try {
+          const signalData = JSON.parse(message);
+
+          // Extract device ID from topic
+          const topicParts = topic.split('/');
+          const type = topicParts[1];
+          const deviceId = topicParts[2]; // Assuming format: response/{type}/{deviceId}
+
+          // Notify listeners of WebRTC signal
+          if (type == "audio") {
+              if (this.onWebRTCSignalAudio) {
+                  this.onWebRTCSignalAudio(deviceId, signalData);
+              }
+          }
+          else {
+              if (this.onWebRTCSignalVideo) {
+                  this.onWebRTCSignalVideo(deviceId, signalData);
+              }
+          }
       console.log(`WebRTC signal received for device: ${deviceId}`, signalData);
     } catch (error) {
       console.error('Error processing WebRTC signal:', error);
