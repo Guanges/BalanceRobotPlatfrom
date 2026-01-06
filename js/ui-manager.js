@@ -204,16 +204,16 @@ class UIManager {
         }
         else {
             // Create new video element
-            const videoElement = document.createElement('audio');
-            videoElement.id = 'video-preview';
-            videoElement.className = 'video-preview-element';
-            videoElement.autoplay = true;
-            videoElement.muted = false;
-            videoElement.setAttribute('playsinline', '');
-            videoElement.playsInline = true;
+            const audioElement = document.createElement('audio');
+            audioElement.id = 'audio-preview';
+            audioElement.className = 'audio-preview-element';
+            audioElement.autoplay = true;
+            audioElement.muted = false;
+            audioElement.setAttribute('playsinline', '');
+            audioElement.playsInline = true;
             // Set the stream as the video source
-            videoElement.srcObject = stream;
-            this.currentVideoElement = videoElement;
+            audioElement.srcObject = stream;
+            this.currentAudioElement = audioElement;
         }
     }
 
