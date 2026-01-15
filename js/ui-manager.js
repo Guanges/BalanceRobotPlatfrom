@@ -220,7 +220,8 @@ class UIManager {
       deviceIdEl.textContent = deviceId;
 
       // Update device detail header
-      const device = this.mqttClient.devices.find(d => d.id === deviceId);
+      const devices = this.mqttClient.getDeviceList();
+      const device = devices.find(d => d.id === deviceId);
       if (device) {
         const headerEl = document.getElementById('device-detail-header');
         if (headerEl) {
