@@ -23,20 +23,62 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize the UI
   uiManager.init();
 
-  // Simple left nav behavior and notifications toggle
-  document.addEventListener('click', (event) => {
-    const t = event.target;
-    if (t.id === 'toggle-notifications') {
-      const sidebar = document.getElementById('notifications-sidebar');
-      if (sidebar) {
-        sidebar.classList.toggle('hidden');
-        t.textContent = sidebar.classList.contains('hidden') ? '展开' : '隐藏';
-      }
+  // Navigation-content linkage functionality
+  function showContentView(contentId) {
+    // Hide all content views
+    document.querySelectorAll('.content-view').forEach(view => {
+      view.classList.remove('active');
+    });
+
+    // Show the requested content view
+    const contentView = document.getElementById(contentId);
+    if (contentView) {
+      contentView.classList.add('active');
     }
-    // nav buttons
-    if (t.classList && t.classList.contains('nav-btn')) {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      t.classList.add('active');
+
+    // Update active state of navigation buttons
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // Find the corresponding navigation button and activate it
+    const navBtn = document.querySelector(`.nav-item[data-target="${contentId}"]`);
+    if (navBtn) {
+      navBtn.classList.add('active');
+    }
+  }
+
+  // Handle navigation clicks
+  document.querySelectorAll('.nav-item').forEach(button => {
+    button.addEventListener('click', function() {
+      const targetView = this.getAttribute('data-target');
+      if (targetView) {
+        showContentView(targetView);
+      }
+    });
+  });
+
+  // Handle notifications sidebar
+  document.getElementById('toggle-notifications').addEventListener('click', function() {
+    const sidebar = document.getElementById('notifications-sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('collapsed');
+    }
+  });
+
+  // Handle sidebar toggle for mobile
+  document.getElementById('sidebar-toggle').addEventListener('click', function() {
+    const sidebar = document.getElementById('notifications-sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('collapsed');
+    }
+  });
+
+  // Handle clear notifications
+  document.getElementById('clear-notifications').addEventListener('click', function() {
+    const notificationsList = document.getElementById('notifications-list');
+    if (notificationsList) {
+      notificationsList.innerHTML = '<div class="text-center text-muted p-3">暂无通知</div>';
     }
   });
 
@@ -48,5 +90,5 @@ document.addEventListener('DOMContentLoaded', () => {
     uiManager
   };
 
-  console.log('Device management system initialized successfully');
+  console.log('Balance Robot Platform initialized successfully');
 });
