@@ -88,7 +88,10 @@ class UIManager {
     
     deviceDiv.innerHTML = `
       <div class="card-body">
-        <h5 class="card-title">${device.name} <span class="badge ${statusClass}">${statusText}</span></h5>
+        <div class="d-flex justify-content-between align-items-start">
+          <h5 class="card-title mb-0">${device.name} <span class="badge ${statusClass}">${statusText}</span></h5>
+          <div><button class="btn btn-outline-primary btn-sm view-device-btn" data-device-id="${device.id}">查看</button></div>
+        </div>
         <p class="card-text">ID: ${device.id}</p>
         <div class="device-controls">
           <button class="btn btn-primary btn-sm start-video-btn" data-device-id="${device.id}">Start Video Preview</button>
@@ -134,9 +137,14 @@ class UIManager {
     // Use event delegation for device controls
     this.deviceListContainer.addEventListener('click', (event) => {
       const target = event.target;
-      
+
+      // Handle view button
+      if (target.classList.contains('view-device-btn')) {
+        const deviceId = target.getAttribute('data-device-id');
+        this.showDeviceModal(deviceId);
+      }
       // Handle start video button
-      if (target.classList.contains('start-video-btn')) {
+      else if (target.classList.contains('start-video-btn')) {
         const deviceId = target.getAttribute('data-device-id');
         this.startVideoPreview(deviceId);
       }
@@ -156,11 +164,42 @@ class UIManager {
       }
       // Handle action buttons
       else if (target.classList.contains('action-btn')) {
-        const deviceId = target.getAttribute('data-device-id');
+        const deviceId = target.getAttribute('data-device-id') || document.getElementById('deviceDetailId')?.textContent;
         const command = target.getAttribute('data-command');
-        this.sendControlCommand(deviceId, command);
+        if (deviceId) this.sendControlCommand(deviceId, command);
       }
     });
+
+    // Modal controls (buttons inside modal may be outside device list)
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (target.id === 'modal-start-video') {
+        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+        if (deviceId) this.startVideoPreview(deviceId);
+      }
+      else if (target.id === 'modal-start-talk') {
+        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+        if (deviceId) this.startVoiceTalk(deviceId);
+      }
+      else if (target.id === 'save-device-mode') {
+        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+        const mode = document.getElementById('device-mode-select')?.value;
+        if (deviceId && mode) this.sendControlCommand(deviceId, `set_mode:${mode}`);
+      }
+    });
+
+    // Handle modal hidden to restore preview container
+    const modalEl = document.getElementById('device-detail-modal');
+    if (modalEl) {
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        // restore main preview container
+        this.videoPreviewContainer = document.getElementById('video-preview-container');
+        // clear modal video element
+        const modalVideo = document.querySelector('#modal-video-preview video');
+        if (modalVideo) modalVideo.remove();
+        this.currentVideoElement = null;
+      });
+    }
   }
 
   /**
@@ -253,6 +292,26 @@ class UIManager {
     handleRemoteStreamAudioReceived(stream) {
         this.showAudioPlay(stream);
     }
+
+  /**
+   * Shows device detail modal and prepares modal preview container.
+   * @param {string} deviceId The ID of the device to show.
+   */
+  showDeviceModal(deviceId) {
+    const titleEl = document.getElementById('deviceDetailTitle');
+    const idEl = document.getElementById('deviceDetailId');
+    if (titleEl) titleEl.textContent = deviceId;
+    if (idEl) idEl.textContent = deviceId;
+    // point preview to modal container
+    const modalVideoContainer = document.getElementById('modal-video-preview');
+    if (modalVideoContainer) this.videoPreviewContainer = modalVideoContainer;
+    const modalEl = document.getElementById('device-detail-modal');
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+  }
+
   /**
    * Starts video preview for a specific device.
    * @param {string} deviceId The ID of the device to start video preview for.

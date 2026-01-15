@@ -23,6 +23,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize the UI
   uiManager.init();
 
+  // Simple left nav behavior and notifications toggle
+  document.addEventListener('click', (event) => {
+    const t = event.target;
+    if (t.id === 'toggle-notifications') {
+      const sidebar = document.getElementById('notifications-sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('hidden');
+        t.textContent = sidebar.classList.contains('hidden') ? '展开' : '隐藏';
+      }
+    }
+    // nav buttons
+    if (t.classList && t.classList.contains('nav-btn')) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      t.classList.add('active');
+    }
+  });
+
   // Store references in global scope for debugging purposes
   window.app = {
     config,
