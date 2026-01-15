@@ -10,37 +10,93 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container main-container">
-    <!-- Header Section -->
-    <header class="header">
-      <h1>Device Management System</h1>
-      <p>Manage and control your IoT devices with video preview and voice intercom</p>
-      <div id="connection-status" class="connection-status disconnected">Disconnected</div>
-    </header>
+  <div class="app-layout">
+    <!-- Left navigation -->
+    <nav class="left-nav" aria-label="Main navigation">
+      <button class="nav-btn active" id="nav-devices" title="设备管理">📟</button>
+      <button class="nav-btn" id="nav-system" title="系统设置">⚙️</button>
+      <button class="nav-btn" id="nav-users" title="用户管理">👤</button>
+    </nav>
 
-    <!-- Device List Section -->
-    <section class="device-section">
-      <h2>Connected Devices</h2>
-      <div id="device-list" class="row">
-        <!-- Device items will be dynamically added here -->
-        <div class="col-12">
-          <div class="alert alert-info text-center">
-            No devices found. Waiting for device registration...
+    <!-- Main content -->
+    <main class="main-content">
+      <header class="header">
+        <h1>Device Management System</h1>
+        <p>Manage and control your IoT devices with video preview and voice intercom</p>
+        <div id="connection-status" class="connection-status disconnected">Disconnected</div>
+      </header>
+
+      <!-- Device List Section -->
+      <section class="device-section">
+        <h2>Connected Devices</h2>
+        <div id="device-list" class="row">
+          <!-- Device items will be dynamically added here -->
+          <div class="col-12">
+            <div class="alert alert-info text-center">
+              No devices found. Waiting for device registration...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Video Preview Section -->
+      <section class="video-section">
+        <h2>Video Preview</h2>
+        <div id="video-preview-container" class="position-relative">
+          <!-- Video element will be dynamically added here -->
+          <div class="empty-state">
+            <i class="bi bi-camera-video"></i>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Right sidebar (notifications) -->
+    <aside class="right-sidebar" id="notifications-sidebar">
+      <div class="notifications-header">
+        <h5>通知</h5>
+        <button class="btn btn-sm btn-outline-secondary" id="toggle-notifications">隐藏</button>
+      </div>
+      <div id="notifications-list">
+        <div class="notification-item">暂无通知</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Device detail modal -->
+  <div class="modal fade" id="device-detail-modal" tabindex="-1" aria-labelledby="deviceDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deviceDetailTitle">设备详情</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>ID: <span id="deviceDetailId"></span></p>
+          <div id="modal-video-preview" style="min-height:200px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:center;">
+            <div class="empty-state">视频预览将在此处显示</div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-primary btn-sm start-video-btn" data-device-id="" id="modal-start-video">开始视频</button>
+            <button class="btn btn-success btn-sm start-talk-btn" data-device-id="" id="modal-start-talk">语音对讲</button>
+            <div class="btn-group ms-2" role="group">
+              <button class="btn btn-secondary btn-sm action-btn" data-command="ptz_up">上</button>
+              <button class="btn btn-secondary btn-sm action-btn" data-command="ptz_down">下</button>
+              <button class="btn btn-secondary btn-sm action-btn" data-command="ptz_left">左</button>
+              <button class="btn btn-secondary btn-sm action-btn" data-command="ptz_right">右</button>
+            </div>
+            <div class="ms-2 d-inline-block">
+              <select id="device-mode-select" class="form-select form-select-sm">
+                <option value="auto">自动模式</option>
+                <option value="manual">手动模式</option>
+                <option value="sleep">休眠模式</option>
+              </select>
+              <button class="btn btn-outline-primary btn-sm mt-1" id="save-device-mode">保存模式</button>
+            </div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- Video Preview Section -->
-    <section class="video-section">
-      <h2>Video Preview</h2>
-      <div id="video-preview-container" class="position-relative">
-        <!-- Video element will be dynamically added here -->
-        <div class="empty-state">
-          <i class="bi bi-camera-video"></i>
-        </div>
-      </div>
-    </section>
+    </div>
   </div>
 
   <!-- Bootstrap JS Bundle with Popper -->
