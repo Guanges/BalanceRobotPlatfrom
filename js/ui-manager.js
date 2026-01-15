@@ -286,8 +286,19 @@ class UIManager {
   showAudioPlay(stream) {
     const audioElement = document.getElementById('audio-preview');
     if (audioElement) {
+      // Hide the audio element as requested
+      audioElement.style.display = 'none';
       audioElement.srcObject = stream;
-      audioElement.style.display = 'block';
+      // Mute the audio to allow autoplay without user interaction
+      audioElement.muted = false;
+      // Attempt to play the audio automatically
+      const playPromise = audioElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Audio autoplay was prevented:', error);
+          // If autoplay is blocked, we can try other strategies, but hiding as requested
+        });
+      }
     }
   }
 
