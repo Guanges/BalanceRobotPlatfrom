@@ -19,7 +19,7 @@ class UIManager {
     this.videoPreviewContainer = null;
     this.currentVideoElement = null;
     this.currentAudioElement = null;
-    
+
     // Bind event handlers
     this.handleDeviceListUpdate = this.handleDeviceListUpdate.bind(this);
     this.handleDeviceStatusUpdate = this.handleDeviceStatusUpdate.bind(this);
@@ -39,10 +39,10 @@ class UIManager {
     // Get DOM elements
     this.deviceListContainer = document.getElementById('device-list');
     this.videoPreviewContainer = document.getElementById('video-preview-container');
-    
+
     // Bind control events
     this.bindControlEvents();
-    
+
     // Initial render
     this.renderDeviceList(this.mqttClient.getDeviceList());
   }
@@ -56,15 +56,27 @@ class UIManager {
       console.error('Device list container not found');
       return;
     }
-    
+
     // Clear existing content
     this.deviceListContainer.innerHTML = '';
-    
+
     if (devices.length === 0) {
-      this.deviceListContainer.innerHTML = '<div class="alert alert-info">No devices found. Waiting for device registration...</div>';
+      this.deviceListContainer.innerHTML = '<div class="alert alert-info text-center">暂无设备。等待设备注册...</div>';
       return;
     }
-    
+
+    // Create table header
+    const tableHeader = document.createElement('div');
+    tableHeader.className = 'device-table-header row g-3 mb-3 fw-bold';
+    tableHeader.innerHTML = `
+      <div class="col-md-3">设备名称</div>
+      <div class="col-md-3">UUID</div>
+      <div class="col-md-2">在线状态</div>
+      <div class="col-md-2">最后在线时间</div>
+      <div class="col-md-2">操作</div>
+    `;
+    this.deviceListContainer.appendChild(tableHeader);
+
     // Create device list items
     devices.forEach(device => {
       const deviceElement = this.createDeviceElement(device);
@@ -79,35 +91,28 @@ class UIManager {
    */
   createDeviceElement(device) {
     const deviceDiv = document.createElement('div');
-    deviceDiv.className = 'device-item card mb-3';
+    deviceDiv.className = 'device-row row g-3 py-2 border-bottom align-items-center';
     deviceDiv.id = `device-${device.id}`;
-    
-    // Determine status class
-    const statusClass = device.isOnline() ? 'status-online' : 'status-offline';
-    const statusText = device.isOnline() ? 'Online' : 'Offline';
-    
+
+    // Determine status class and text
+    const statusClass = device.isOnline() ? 'status-badge online' : 'status-badge offline';
+    const statusText = device.isOnline() ? '在线' : '离线';
+
+    // Format last seen time
+    const lastSeenTime = device.lastSeen ? new Date(device.lastSeen).toLocaleString('zh-CN') : '未知';
+
     deviceDiv.innerHTML = `
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <h5 class="card-title mb-0">${device.name} <span class="badge ${statusClass}">${statusText}</span></h5>
-          <div><button class="btn btn-outline-primary btn-sm view-device-btn" data-device-id="${device.id}">查看</button></div>
-        </div>
-        <p class="card-text">ID: ${device.id}</p>
-        <div class="device-controls">
-          <button class="btn btn-primary btn-sm start-video-btn" data-device-id="${device.id}">Start Video Preview</button>
-          <button class="btn btn-warning btn-sm stop-video-btn" data-device-id="${device.id}">Stop Video</button>
-          <button class="btn btn-success btn-sm start-talk-btn" data-device-id="${device.id}">Start Voice Talk</button>
-          <button class="btn btn-warning btn-sm stop-talk-btn" data-device-id="${device.id}">Stop Talk</button>
-          <div class="device-actions mt-2">
-            <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="light_on">Light On</button>
-            <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="light_off">Light Off</button>
-            <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="lock">Lock</button>
-            <button class="btn btn-secondary btn-sm action-btn" data-device-id="${device.id}" data-command="unlock">Unlock</button>
-          </div>
-        </div>
+      <div class="col-md-3">${device.name}</div>
+      <div class="col-md-3">${device.id}</div>
+      <div class="col-md-2"><span class="${statusClass}">${statusText}</span></div>
+      <div class="col-md-2">${lastSeenTime}</div>
+      <div class="col-md-2">
+        <button class="btn btn-primary btn-sm view-device-btn" data-device-id="${device.id}">
+          <i class="fas fa-eye me-1"></i> 查看
+        </button>
       </div>
     `;
-    
+
     return deviceDiv;
   }
 
@@ -121,12 +126,12 @@ class UIManager {
     if (!deviceElement) {
       return;
     }
-    
+
     // Update status badge
-    const statusBadge = deviceElement.querySelector('.badge');
-    if (statusBadge) {
-      statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-      statusBadge.className = status === 'online' ? 'badge status-online' : 'badge status-offline';
+    const statusElement = deviceElement.querySelector('.status-badge');
+    if (statusElement) {
+      statusElement.textContent = status === 'online' ? '在线' : '离线';
+      statusElement.className = status === 'online' ? 'status-badge online' : 'status-badge offline';
     }
   }
 
@@ -138,67 +143,109 @@ class UIManager {
     this.deviceListContainer.addEventListener('click', (event) => {
       const target = event.target;
 
-      // Handle view button
-      if (target.classList.contains('view-device-btn')) {
-        const deviceId = target.getAttribute('data-device-id');
-        this.showDeviceModal(deviceId);
-      }
-      // Handle start video button
-      else if (target.classList.contains('start-video-btn')) {
-        const deviceId = target.getAttribute('data-device-id');
-        this.startVideoPreview(deviceId);
-      }
-      // Handle start talk button
-      else if (target.classList.contains('start-talk-btn')) {
-        const deviceId = target.getAttribute('data-device-id');
-        this.startVoiceTalk(deviceId);
-      }
-      // Handle stop button
-      else if (target.classList.contains('stop-video-btn')) {
-        const deviceId = target.getAttribute('data-device-id');
-        this.stopVideoCommunication(deviceId);
-      }
-      else if (target.classList.contains('stop-talk-btn')) {
-          const deviceId = target.getAttribute('data-device-id');
-          this.stopAudioCommunication(deviceId);
-      }
-      // Handle action buttons
-      else if (target.classList.contains('action-btn')) {
-        const deviceId = target.getAttribute('data-device-id') || document.getElementById('deviceDetailId')?.textContent;
-        const command = target.getAttribute('data-command');
-        if (deviceId) this.sendControlCommand(deviceId, command);
+      // Handle view button - navigate to device detail page
+      if (target.classList.contains('view-device-btn') || target.closest('.view-device-btn')) {
+        const btn = target.classList.contains('view-device-btn') ? target : target.closest('.view-device-btn');
+        const deviceId = btn.getAttribute('data-device-id');
+        this.showDeviceDetails(deviceId);
       }
     });
 
-    // Modal controls (buttons inside modal may be outside device list)
+    // Handle device detail page controls
     document.addEventListener('click', (event) => {
       const target = event.target;
-      if (target.id === 'modal-start-video') {
-        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+
+      // Back to devices button
+      if (target.id === 'back-to-devices') {
+        this.showDeviceList();
+      }
+      // Start video button on device detail page
+      else if (target.id === 'start-video-btn') {
+        const deviceId = document.getElementById('current-device-id')?.textContent;
         if (deviceId) this.startVideoPreview(deviceId);
       }
-      else if (target.id === 'modal-start-talk') {
-        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+      // Stop video button on device detail page
+      else if (target.id === 'stop-video-btn') {
+        const deviceId = document.getElementById('current-device-id')?.textContent;
+        if (deviceId) this.stopVideoCommunication(deviceId);
+      }
+      // Start talk button on device detail page
+      else if (target.id === 'start-talk-btn') {
+        const deviceId = document.getElementById('current-device-id')?.textContent;
         if (deviceId) this.startVoiceTalk(deviceId);
       }
+      // Stop talk button on device detail page
+      else if (target.id === 'stop-talk-btn') {
+        const deviceId = document.getElementById('current-device-id')?.textContent;
+        if (deviceId) this.stopAudioCommunication(deviceId);
+      }
+      // Save device mode button on device detail page
       else if (target.id === 'save-device-mode') {
-        const deviceId = document.getElementById('deviceDetailId')?.textContent;
+        const deviceId = document.getElementById('current-device-id')?.textContent;
         const mode = document.getElementById('device-mode-select')?.value;
         if (deviceId && mode) this.sendControlCommand(deviceId, `set_mode:${mode}`);
       }
+      // PTZ and movement buttons
+      else if (target.classList.contains('ptz-btn') || target.classList.contains('movement-btn') || target.classList.contains('action-btn')) {
+        const deviceId = document.getElementById('current-device-id')?.textContent;
+        const command = target.getAttribute('data-command');
+        if (deviceId && command) this.sendControlCommand(deviceId, command);
+      }
+    });
+  }
+
+  /**
+   * Shows device detail page for a specific device.
+   * @param {string} deviceId The ID of the device to show.
+   */
+  showDeviceDetails(deviceId) {
+    // Hide all content views
+    document.querySelectorAll('.content-view').forEach(view => {
+      view.classList.remove('active');
     });
 
-    // Handle modal hidden to restore preview container
-    const modalEl = document.getElementById('device-detail-modal');
-    if (modalEl) {
-      modalEl.addEventListener('hidden.bs.modal', () => {
-        // restore main preview container
-        this.videoPreviewContainer = document.getElementById('video-preview-container');
-        // clear modal video element
-        const modalVideo = document.querySelector('#modal-video-preview video');
-        if (modalVideo) modalVideo.remove();
-        this.currentVideoElement = null;
-      });
+    // Show device detail view
+    const deviceDetailView = document.getElementById('device-detail');
+    if (deviceDetailView) {
+      deviceDetailView.classList.add('active');
+
+      // Set the current device ID
+      let deviceIdEl = document.getElementById('current-device-id');
+      if (!deviceIdEl) {
+        deviceIdEl = document.createElement('div');
+        deviceIdEl.id = 'current-device-id';
+        deviceIdEl.style.display = 'none';
+        document.body.appendChild(deviceIdEl);
+      }
+      deviceIdEl.textContent = deviceId;
+
+      // Update device detail header
+      const device = this.mqttClient.devices.find(d => d.id === deviceId);
+      if (device) {
+        const headerEl = document.getElementById('device-detail-header');
+        if (headerEl) {
+          headerEl.innerHTML = `
+            <h3>${device.name}</h3>
+            <p class="text-muted mb-0">ID: ${device.id} | 状态: <span class="${device.isOnline() ? 'status-badge online' : 'status-badge offline'}">${device.isOnline() ? '在线' : '离线'}</span></p>
+          `;
+        }
+      }
+    }
+  }
+
+  /**
+   * Shows the device list view.
+   */
+  showDeviceList() {
+    // Hide all content views
+    document.querySelectorAll('.content-view').forEach(view => {
+      view.classList.remove('active');
+    });
+
+    // Show device management view
+    const deviceManagementView = document.getElementById('device-management');
+    if (deviceManagementView) {
+      deviceManagementView.classList.add('active');
     }
   }
 
@@ -211,50 +258,37 @@ class UIManager {
       console.error('Video preview container not found');
       return;
     }
-    
-    // Remove existing video element if present
-      if (this.currentVideoElement) {
-          this.currentVideoElement.srcObject = stream;
-      }
-      else {
-          // Create new video element
-          const videoElement = document.createElement('video');
-          videoElement.id = 'video-preview';
-          videoElement.className = 'video-preview-element';
-          videoElement.autoplay = true;
-          videoElement.controls = true;
-          videoElement.muted = true;
-          videoElement.setAttribute('playsinline', '');
-          videoElement.playsInline = true;
-          // Set the stream as the video source
-          videoElement.srcObject = stream;
 
-          // Add to container
-          this.videoPreviewContainer.appendChild(videoElement);
-          this.currentVideoElement = videoElement;
-      }
+    // Remove existing video element if present
+    if (this.currentVideoElement) {
+      this.currentVideoElement.srcObject = stream;
+    } else {
+      // Remove any existing preview content and create new video element
+      this.videoPreviewContainer.innerHTML = '';
+      const videoElement = document.createElement('video');
+      videoElement.id = 'video-preview';
+      videoElement.className = 'video-preview-element';
+      videoElement.autoplay = true;
+      videoElement.controls = true;
+      videoElement.muted = true;
+      videoElement.setAttribute('playsinline', '');
+      videoElement.playsInline = true;
+      // Set the stream as the video source
+      videoElement.srcObject = stream;
+
+      // Add to container
+      this.videoPreviewContainer.appendChild(videoElement);
+      this.currentVideoElement = videoElement;
+    }
   }
 
-    showAudioPlay(stream) {
-
-        // Remove existing video element if present
-        if (this.currentAudioElement) {
-            this.currentAudioElement.srcObject = stream;
-        }
-        else {
-            // Create new video element
-            const audioElement = document.createElement('audio');
-            audioElement.id = 'audio-preview';
-            audioElement.className = 'audio-preview-element';
-            audioElement.autoplay = true;
-            audioElement.muted = false;
-            audioElement.setAttribute('playsinline', '');
-            audioElement.playsInline = true;
-            // Set the stream as the video source
-            audioElement.srcObject = stream;
-            this.currentAudioElement = audioElement;
-        }
+  showAudioPlay(stream) {
+    const audioElement = document.getElementById('audio-preview');
+    if (audioElement) {
+      audioElement.srcObject = stream;
+      audioElement.style.display = 'block';
     }
+  }
 
   /**
    * Updates the UI based on current state.
@@ -289,27 +323,8 @@ class UIManager {
     this.showVideoPreview(stream);
   }
 
-    handleRemoteStreamAudioReceived(stream) {
-        this.showAudioPlay(stream);
-    }
-
-  /**
-   * Shows device detail modal and prepares modal preview container.
-   * @param {string} deviceId The ID of the device to show.
-   */
-  showDeviceModal(deviceId) {
-    const titleEl = document.getElementById('deviceDetailTitle');
-    const idEl = document.getElementById('deviceDetailId');
-    if (titleEl) titleEl.textContent = deviceId;
-    if (idEl) idEl.textContent = deviceId;
-    // point preview to modal container
-    const modalVideoContainer = document.getElementById('modal-video-preview');
-    if (modalVideoContainer) this.videoPreviewContainer = modalVideoContainer;
-    const modalEl = document.getElementById('device-detail-modal');
-    if (modalEl) {
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
-    }
+  handleRemoteStreamAudioReceived(stream) {
+    this.showAudioPlay(stream);
   }
 
   /**
@@ -336,8 +351,8 @@ class UIManager {
    */
   stopVideoCommunication(deviceId) {
     console.log(`Stopping communication with device: ${deviceId}`);
-      this.webRTCManager.stopVideoCommunication(deviceId);
-    
+    this.webRTCManager.stopVideoCommunication(deviceId);
+
     // Remove video preview if it exists
     if (this.currentVideoElement) {
       this.currentVideoElement.remove();
@@ -345,16 +360,17 @@ class UIManager {
     }
   }
 
-    stopAudioCommunication(deviceId) {
-        console.log(`Stopping communication with device: ${deviceId}`);
-        this.webRTCManager.stopAudioCommunication(deviceId);
+  stopAudioCommunication(deviceId) {
+    console.log(`Stopping communication with device: ${deviceId}`);
+    this.webRTCManager.stopAudioCommunication(deviceId);
 
-        // Remove video preview if it exists
-        if (this.currentAudioElement) {
-            this.currentAudioElement.remove();
-            this.currentAudioElement = null;
-        }
+    // Hide audio element if it exists
+    const audioElement = document.getElementById('audio-preview');
+    if (audioElement) {
+      audioElement.style.display = 'none';
+      audioElement.srcObject = null;
     }
+  }
 
   /**
    * Sends a control command to a specific device.
