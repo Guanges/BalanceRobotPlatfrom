@@ -169,7 +169,7 @@ class WebRTCManager {
                     userid: this.uuid,
                     sdp: fullAnswer.sdp
                 },
-                `response/video/${deviceId}`
+                `response/video/${deviceId}/${this.uuid}`
             );
         } catch (error) {
             console.error('Error handling WebRTC offer:', error);
@@ -215,7 +215,7 @@ class WebRTCManager {
                     userid: this.uuid,
                     sdp: fullAnswer.sdp
                 },
-                `response/audio/${deviceId}`
+                `response/audio/${deviceId}/${this.uuid}`
             );
         } catch (error) {
             console.error('Error handling WebRTC offer:', error);
@@ -260,7 +260,7 @@ class WebRTCManager {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
         type: 'answer',
             sdp: answer.sdp
-        }, "response/" + deviceId);
+        }, "response/" + deviceId + "/" + this.uuid);
     } catch (error) {
       console.error('Error creating WebRTC answer:', error);
     }
@@ -296,7 +296,7 @@ class WebRTCManager {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'startvideo',
             userid: this.uuid
-        }, "response/video/" + deviceId);
+        }, "response/video/" + deviceId + "/" + this.uuid);
       // Create offer for video connection
       //await this.createOffer(deviceId);
     } catch (error) {
@@ -319,7 +319,7 @@ class WebRTCManager {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'starttalk',
             userid: this.uuid
-        }, "response/audio/" + deviceId);
+        }, "response/audio/" + deviceId + "/" + this.uuid);
       
       // Create offer for voice connection
       //await this.createOffer(deviceId);
@@ -336,7 +336,7 @@ class WebRTCManager {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'stopvideo',
             userid: this.uuid
-        }, "response/video/" + deviceId);
+        }, "response/video/" + deviceId + "/" + this.uuid);
     // Close peer connection
     if (this.peerConnectionVideo) {
         this.peerConnectionVideo.close();
@@ -351,7 +351,7 @@ class WebRTCManager {
         this.mqttClient.sendWebRTCSignalWithResponseTopic(deviceId, {
             type: 'stoptalk',
             userid: this.uuid
-        }, "response/audio/" + deviceId);
+        }, "response/audio/" + deviceId + "/" + this.uuid);
         // Close peer connection
         if (this.peerConnectionTalk) {
             this.peerConnectionTalk.close();
