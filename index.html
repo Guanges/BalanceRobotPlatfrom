@@ -325,7 +325,7 @@
                 <div class="card-body">
                   <div class="row">
                     <div class="col-md-6">
-                      <audio id="audio-preview" controls style="width: 100%; display: none;"></audio>
+                      <audio id="audio-preview" controls style="display: none;"></audio>
                     </div>
                   </div>
                 </div>
@@ -360,25 +360,29 @@
                 <div class="card-header">
                   <h5 class="mb-0">云台控制</h5>
                 </div>
-                <div class="card-body text-center">
-                  <div class="ptz-controls mb-3">
-                    <button class="btn btn-lg btn-outline-secondary ptz-btn" data-command="ptz_up">
+                <div class="card-body text-center ptz-container">
+                  <div class="ptz-controls d-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px; justify-content: center; align-items: center; max-width: 240px; margin: 0 auto;">
+                    <div></div> <!-- Empty top-left cell -->
+                    <button class="btn btn-lg btn-outline-secondary ptz-btn ptz-up-btn" data-command="ptz_up">
                       <i class="fas fa-arrow-up"></i>
                     </button>
-                    <div class="d-flex justify-content-center">
-                      <button class="btn btn-lg btn-outline-secondary ptz-btn me-2" data-command="ptz_left">
-                        <i class="fas fa-arrow-left"></i>
-                      </button>
-                      <button class="btn btn-lg btn-outline-secondary ptz-btn" data-command="ptz_center">
-                        <i class="fas fa-bullseye"></i>
-                      </button>
-                      <button class="btn btn-lg btn-outline-secondary ptz-btn ms-2" data-command="ptz_right">
-                        <i class="fas fa-arrow-right"></i>
-                      </button>
-                    </div>
-                    <button class="btn btn-lg btn-outline-secondary ptz-btn" data-command="ptz_down">
+                    <div></div> <!-- Empty top-right cell -->
+
+                    <button class="btn btn-lg btn-outline-secondary ptz-btn ptz-left-btn" data-command="ptz_left">
+                      <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="btn btn-lg btn-outline-secondary ptz-btn ptz-center-btn" data-command="ptz_center">
+                      <i class="fas fa-bullseye"></i>
+                    </button>
+                    <button class="btn btn-lg btn-outline-secondary ptz-btn ptz-right-btn" data-command="ptz_right">
+                      <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <div></div> <!-- Empty bottom-left cell -->
+                    <button class="btn btn-lg btn-outline-secondary ptz-btn ptz-down-btn" data-command="ptz_down">
                       <i class="fas fa-arrow-down"></i>
                     </button>
+                    <div></div> <!-- Empty bottom-right cell -->
                   </div>
                 </div>
               </div>
@@ -388,25 +392,29 @@
                 <div class="card-header">
                   <h5 class="mb-0">移动控制</h5>
                 </div>
-                <div class="card-body text-center">
-                  <div class="movement-controls mb-3">
-                    <button class="btn btn-lg btn-outline-secondary movement-btn mb-2" data-command="move_forward">
+                <div class="card-body text-center movement-container">
+                  <div class="movement-controls d-grid" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px; justify-content: center; align-items: center; max-width: 240px; margin: 0 auto;">
+                    <div></div> <!-- Empty top-left cell -->
+                    <button class="btn btn-lg btn-outline-secondary movement-btn move-forward-btn" data-command="move_forward">
                       <i class="fas fa-arrow-up"></i>
                     </button>
-                    <div class="d-flex justify-content-center">
-                      <button class="btn btn-lg btn-outline-secondary movement-btn me-2" data-command="move_left">
-                        <i class="fas fa-arrow-left"></i>
-                      </button>
-                      <button class="btn btn-lg btn-outline-secondary movement-btn" data-command="move_stop">
-                        <i class="fas fa-pause"></i>
-                      </button>
-                      <button class="btn btn-lg btn-outline-secondary movement-btn ms-2" data-command="move_right">
-                        <i class="fas fa-arrow-right"></i>
-                      </button>
-                    </div>
-                    <button class="btn btn-lg btn-outline-secondary movement-btn mt-2" data-command="move_backward">
+                    <div></div> <!-- Empty top-right cell -->
+
+                    <button class="btn btn-lg btn-outline-secondary movement-btn move-left-btn" data-command="move_left">
+                      <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="btn btn-lg btn-outline-secondary movement-btn move-stop-btn" data-command="move_stop">
+                      <i class="fas fa-pause"></i>
+                    </button>
+                    <button class="btn btn-lg btn-outline-secondary movement-btn move-right-btn" data-command="move_right">
+                      <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <div></div> <!-- Empty bottom-left cell -->
+                    <button class="btn btn-lg btn-outline-secondary movement-btn move-backward-btn" data-command="move_backward">
                       <i class="fas fa-arrow-down"></i>
                     </button>
+                    <div></div> <!-- Empty bottom-right cell -->
                   </div>
                 </div>
               </div>
@@ -447,61 +455,6 @@
       </div>
     </main>
 
-    <!-- Right Notification Sidebar -->
-    <aside class="right-sidebar" id="notifications-sidebar">
-      <div class="notifications-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">通知</h5>
-        <div>
-          <button class="btn btn-sm btn-outline-secondary me-1" id="clear-notifications">
-            <i class="fas fa-trash"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-secondary" id="toggle-notifications">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      <div class="notifications-count">
-        <span class="badge bg-primary">3</span>
-      </div>
-      <div id="notifications-list" class="notifications-content">
-        <div class="notification-item">
-          <div class="notification-icon bg-success">
-            <i class="fas fa-check"></i>
-          </div>
-          <div class="notification-content">
-            <h6>设备连接成功</h6>
-            <p>设备 [ROBOT-001] 已成功连接到系统</p>
-            <small class="text-muted">2分钟前</small>
-          </div>
-        </div>
-        <div class="notification-item">
-          <div class="notification-icon bg-warning">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <div class="notification-content">
-            <h6>电池低电量</h6>
-            <p>设备 [ROBOT-002] 电池电量低于20%</p>
-            <small class="text-muted">15分钟前</small>
-          </div>
-        </div>
-        <div class="notification-item">
-          <div class="notification-icon bg-info">
-            <i class="fas fa-info-circle"></i>
-          </div>
-          <div class="notification-content">
-            <h6>系统更新</h6>
-            <p>发现新版本系统固件可用</p>
-            <small class="text-muted">1小时前</small>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Toggle Button for Mobile -->
-    <button class="sidebar-toggle" id="sidebar-toggle">
-      <i class="fas fa-comments"></i>
-      <span class="badge badge-notification">3</span>
-    </button>
   </div>
 
   <!-- Bootstrap JS Bundle with Popper -->

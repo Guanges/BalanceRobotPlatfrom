@@ -58,29 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Handle notifications sidebar
-  document.getElementById('toggle-notifications').addEventListener('click', function() {
-    const sidebar = document.getElementById('notifications-sidebar');
-    if (sidebar) {
-      sidebar.classList.toggle('collapsed');
-    }
-  });
-
-  // Handle sidebar toggle for mobile
-  document.getElementById('sidebar-toggle').addEventListener('click', function() {
-    const sidebar = document.getElementById('notifications-sidebar');
-    if (sidebar) {
-      sidebar.classList.toggle('collapsed');
-    }
-  });
-
-  // Handle clear notifications
-  document.getElementById('clear-notifications').addEventListener('click', function() {
-    const notificationsList = document.getElementById('notifications-list');
-    if (notificationsList) {
-      notificationsList.innerHTML = '<div class="text-center text-muted p-3">暂无通知</div>';
-    }
-  });
 
   // Store references in global scope for debugging purposes
   window.app = {
