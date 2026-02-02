@@ -19,6 +19,8 @@ class UIManager {
     this.videoPreviewContainer = null;
     this.currentVideoElement = null;
     this.currentAudioElement = null;
+    this.filteredDevices = []; // Store filtered devices
+    this.originalDeviceList = []; // Store original device list
 
     // Bind event handlers
     this.handleDeviceListUpdate = this.handleDeviceListUpdate.bind(this);
@@ -39,12 +41,21 @@ class UIManager {
     // Get DOM elements
     this.deviceListContainer = document.getElementById('device-list');
     this.videoPreviewContainer = document.getElementById('video-preview-container');
+    const deviceSearchInput = document.getElementById('device-search');
 
     // Bind control events
     this.bindControlEvents();
 
+    // Add event listener for device search
+    if (deviceSearchInput) {
+      deviceSearchInput.addEventListener('input', (e) => {
+        this.filterDevices(e.target.value);
+      });
+    }
+
     // Initial render
-    this.renderDeviceList(this.mqttClient.getDeviceList());
+    this.originalDeviceList = this.mqttClient.getDeviceList();
+    this.renderDeviceList(this.originalDeviceList);
   }
 
   /**
@@ -82,6 +93,28 @@ class UIManager {
       const deviceElement = this.createDeviceElement(device);
       this.deviceListContainer.appendChild(deviceElement);
     });
+  }
+
+  /**
+   * Filters devices based on search query.
+   * @param {string} query The search query to filter devices by.
+   */
+  filterDevices(query) {
+    query = query.toLowerCase().trim();
+
+    if (!query) {
+      // If no query, show all devices
+      this.filteredDevices = [...this.originalDeviceList];
+    } else {
+      // Filter devices by name or ID
+      this.filteredDevices = this.originalDeviceList.filter(device => {
+        return device.name.toLowerCase().includes(query) ||
+               device.id.toLowerCase().includes(query);
+      });
+    }
+
+    // Render filtered devices
+    this.renderDeviceList(this.filteredDevices);
   }
 
   /**
@@ -315,7 +348,18 @@ class UIManager {
    * @param {Array<Device>} devices The updated list of devices.
    */
   handleDeviceListUpdate(devices) {
-    this.renderDeviceList(devices);
+    // Update the original device list
+    this.originalDeviceList = [...devices];
+
+    // Apply current filter or show all if no filter is active
+    const searchInput = document.getElementById('device-search');
+    if (searchInput && searchInput.value.trim()) {
+      // Reapply filter if there's an active search
+      this.filterDevices(searchInput.value);
+    } else {
+      // Otherwise show all devices
+      this.renderDeviceList(devices);
+    }
   }
 
   /**
