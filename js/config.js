@@ -12,7 +12,7 @@ class Config {
    */
   constructor() {
     // Default MQTT broker URL
-    this.mqttBrokerUrl = 'wss://lab10000.ala.asia-southeast1.emqxsl.com:8084/mqtt';
+    this.mqttBrokerUrl = 'wss://z06bb1f1.ala.cn-hangzhou.emqxsl.cn:8084/mqtt';
     
     // Default registration topic pattern for discovering devices
     this.registrationTopicPattern = 'device/+/register';
