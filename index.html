@@ -284,7 +284,7 @@
             <!-- Video and Controls -->
             <div class="col-lg-8">
               <!-- Video Section -->
-              <div class="card mb-4">
+              <div class="card mb-4 video-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                   <h5 class="mb-0">实时视频</h5>
                   <div>
@@ -301,6 +301,17 @@
                     <div class="empty-state">
                       <i class="fas fa-video-slash"></i>
                       <p>等待视频流...</p>
+                    </div>
+                    <div class="video-action-bar" aria-label="视频操作">
+                      <button type="button" class="video-action-btn" id="video-fullscreen-btn" title="全屏控制"><i class="fas fa-expand"></i><span>全屏控制</span></button>
+                      <button type="button" class="video-action-btn" id="video-pip-btn" title="画中画"><i class="fas fa-clone"></i><span>画中画</span></button>
+                    </div>
+                    <div class="video-fullscreen-controls" aria-label="全屏小车控制">
+                      <button type="button" class="btn btn-lg btn-dark movement-btn" data-command="move_forward" aria-label="前进"><i class="fas fa-arrow-up"></i></button>
+                      <button type="button" class="btn btn-lg btn-dark movement-btn" data-command="move_left" aria-label="左转"><i class="fas fa-arrow-left"></i></button>
+                      <button type="button" class="btn btn-lg btn-danger movement-btn" data-command="move_stop" aria-label="停止"><i class="fas fa-pause"></i></button>
+                      <button type="button" class="btn btn-lg btn-dark movement-btn" data-command="move_right" aria-label="右转"><i class="fas fa-arrow-right"></i></button>
+                      <button type="button" class="btn btn-lg btn-dark movement-btn" data-command="move_backward" aria-label="后退"><i class="fas fa-arrow-down"></i></button>
                     </div>
                   </div>
                 </div>

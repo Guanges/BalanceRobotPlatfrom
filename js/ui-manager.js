@@ -22,6 +22,9 @@ class UIManager {
     this.filteredDevices = []; // Store filtered devices
     this.originalDeviceList = []; // Store original device list
     this.activeMovement = null;
+    this.videoCard = null;
+    this.videoPlaceholder = null;
+    this.videoFloating = false;
 
     // Bind event handlers
     this.handleDeviceListUpdate = this.handleDeviceListUpdate.bind(this);
@@ -42,6 +45,15 @@ class UIManager {
     // Get DOM elements
     this.deviceListContainer = document.getElementById('device-list');
     this.videoPreviewContainer = document.getElementById('video-preview-container');
+    this.videoCard = this.videoPreviewContainer?.closest('.video-card');
+    if (this.videoCard) {
+      this.videoPlaceholder = document.createElement('div');
+      this.videoPlaceholder.className = 'video-card-placeholder';
+      this.videoCard.parentNode.insertBefore(this.videoPlaceholder, this.videoCard);
+      this.updateVideoFloating = this.updateVideoFloating.bind(this);
+      window.addEventListener('scroll', this.updateVideoFloating, { passive: true });
+      window.addEventListener('resize', this.updateVideoFloating);
+    }
     const deviceSearchInput = document.getElementById('device-search');
 
     // Bind control events
@@ -57,6 +69,7 @@ class UIManager {
     // Initial render
     this.originalDeviceList = this.mqttClient.getDeviceList();
     this.renderDeviceList(this.originalDeviceList);
+    this.updateVideoFloating();
   }
 
   /**
@@ -250,6 +263,60 @@ class UIManager {
     document.addEventListener('lostpointercapture', (event) => {
       this.stopMovement(event.target.closest?.('.movement-btn'));
     });
+
+    document.addEventListener('click', (event) => {
+      const fullscreenButton = event.target.closest?.('#video-fullscreen-btn');
+      if (fullscreenButton) this.toggleVideoFullscreen();
+
+      const pipButton = event.target.closest?.('#video-pip-btn');
+      if (pipButton) this.toggleVideoPictureInPicture();
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      this.videoPreviewContainer?.classList.toggle('is-fullscreen', document.fullscreenElement === this.videoPreviewContainer);
+    });
+  }
+
+  /** Keeps the live preview visible as the user scrolls to the controls. */
+  updateVideoFloating() {
+    if (!this.videoCard || !this.currentVideoElement || window.innerWidth > 767 || document.fullscreenElement) return;
+    const rect = this.videoCard.getBoundingClientRect();
+    const shouldFloat = rect.bottom < 8;
+    if (shouldFloat === this.videoFloating) return;
+
+    this.videoFloating = shouldFloat;
+    this.videoCard.classList.toggle('video-floating', shouldFloat);
+    this.videoPlaceholder.style.height = shouldFloat ? `${this.videoCard.offsetHeight}px` : '0px';
+    this.videoPlaceholder.classList.toggle('is-visible', shouldFloat);
+  }
+
+  /** Uses the browser Fullscreen API, with a CSS fallback for iOS browsers. */
+  async toggleVideoFullscreen() {
+    if (!this.videoPreviewContainer) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen?.();
+      } else if (this.videoPreviewContainer.requestFullscreen) {
+        await this.videoPreviewContainer.requestFullscreen();
+      } else {
+        this.videoPreviewContainer.classList.toggle('is-fullscreen');
+      }
+    } catch (error) {
+      console.warn('Fullscreen mode unavailable, using in-page fullscreen:', error);
+      this.videoPreviewContainer.classList.toggle('is-fullscreen');
+    }
+  }
+
+  /** Opens native Picture-in-Picture where supported. */
+  async toggleVideoPictureInPicture() {
+    const video = this.currentVideoElement;
+    if (!video || !document.pictureInPictureEnabled || !video.requestPictureInPicture) return;
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else await video.requestPictureInPicture();
+    } catch (error) {
+      console.warn('Picture-in-Picture unavailable:', error);
+    }
   }
 
   /** Starts a movement command and repeats it every 100ms while held. */
@@ -356,8 +423,8 @@ class UIManager {
     if (this.currentVideoElement) {
       this.currentVideoElement.srcObject = stream;
     } else {
-      // Remove any existing preview content and create new video element
-      this.videoPreviewContainer.innerHTML = '';
+      // Remove only the waiting state so the video action/control overlays remain.
+      this.videoPreviewContainer.querySelector('.empty-state')?.remove();
       const videoElement = document.createElement('video');
       videoElement.id = 'video-preview';
       videoElement.className = 'video-preview-element';
@@ -372,6 +439,8 @@ class UIManager {
       // Add to container
       this.videoPreviewContainer.appendChild(videoElement);
       this.currentVideoElement = videoElement;
+      this.videoPreviewContainer.classList.add('has-video');
+      this.updateVideoFloating();
     }
   }
 
