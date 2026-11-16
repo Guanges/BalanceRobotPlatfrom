@@ -21,6 +21,7 @@ class UIManager {
     this.currentAudioElement = null;
     this.filteredDevices = []; // Store filtered devices
     this.originalDeviceList = []; // Store original device list
+    this.activeMovement = null;
 
     // Bind event handlers
     this.handleDeviceListUpdate = this.handleDeviceListUpdate.bind(this);
@@ -218,13 +219,71 @@ class UIManager {
         const mode = document.getElementById('device-mode-select')?.value;
         if (deviceId && mode) this.sendControlCommand(deviceId, `set_mode:${mode}`);
       }
-      // PTZ and movement buttons
-      else if (target.classList.contains('ptz-btn') || target.classList.contains('movement-btn') || target.classList.contains('action-btn')) {
+      // PTZ and action buttons. Movement buttons use pointer events below so
+      // a long press does not also trigger a duplicate click on mobile.
+      else if (target.classList.contains('ptz-btn') || target.classList.contains('action-btn')) {
         const deviceId = document.getElementById('current-device-id')?.textContent;
         const command = target.getAttribute('data-command');
         if (deviceId && command) this.sendControlCommand(deviceId, command);
       }
     });
+
+    document.addEventListener('pointerdown', (event) => {
+      const button = event.target.closest?.('.movement-btn');
+      if (!button || event.button !== 0) return;
+
+      event.preventDefault();
+      button.setPointerCapture?.(event.pointerId);
+      this.startMovement(button);
+    });
+
+    document.addEventListener('pointerup', (event) => {
+      const button = event.target.closest?.('.movement-btn');
+      if (button) button.releasePointerCapture?.(event.pointerId);
+      this.stopMovement(button);
+    });
+
+    document.addEventListener('pointercancel', (event) => {
+      this.stopMovement(event.target.closest?.('.movement-btn'));
+    });
+
+    document.addEventListener('lostpointercapture', (event) => {
+      this.stopMovement(event.target.closest?.('.movement-btn'));
+    });
+  }
+
+  /** Starts a movement command and repeats it every 100ms while held. */
+  startMovement(button) {
+    const deviceId = document.getElementById('current-device-id')?.textContent;
+    const command = button?.getAttribute('data-command');
+    if (!deviceId || !command) return;
+
+    this.stopMovement();
+    this.activeMovement = { button, deviceId, command, timer: null };
+    button.classList.add('is-pressed');
+    this.sendControlCommand(deviceId, command);
+
+    if (command !== 'move_stop') {
+      this.activeMovement.timer = window.setInterval(() => {
+        if (this.activeMovement) {
+          this.sendControlCommand(this.activeMovement.deviceId, this.activeMovement.command);
+        }
+      }, 100);
+    }
+  }
+
+  /** Stops a held movement button and tells the car to stop. */
+  stopMovement(button) {
+    const active = this.activeMovement;
+    if (!active || (button && active.button !== button)) return;
+
+    window.clearInterval(active.timer);
+    active.button.classList.remove('is-pressed');
+    this.activeMovement = null;
+
+    if (active.command !== 'move_stop') {
+      this.sendControlCommand(active.deviceId, 'move_stop');
+    }
   }
 
   /**

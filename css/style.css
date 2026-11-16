@@ -8,6 +8,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -42,6 +43,7 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: none;
 }
 
 /* App container */
@@ -237,12 +239,23 @@ body {
   border-radius: 12px; /* More rounded corners */
   box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
   transition: all 0.2s ease; /* Smooth transitions */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .ptz-btn:hover, .movement-btn:hover {
   transform: translateY(-2px); /* Slight lift on hover */
   box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Deeper shadow on hover */
   background-color: var(--gray-300); /* Lighter background on hover */
+}
+
+.ptz-btn:active, .movement-btn:active, .movement-btn.is-pressed {
+  transform: translateY(1px) scale(0.96);
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.18);
 }
 
 .btn-lg.ptz-btn, .btn-lg.movement-btn {
@@ -547,4 +560,81 @@ body {
 .row.g-3 > [class*="col-"] {
   padding-left: 15px;
   padding-right: 15px;
+}
+
+/* Touch-friendly control layout on phones. */
+@media (max-width: 767px) {
+  html, body {
+    min-width: 320px;
+  }
+
+  .main-content {
+    padding: 8px;
+  }
+
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .card {
+    margin-bottom: 12px;
+    border-radius: 8px;
+  }
+
+  .card-header,
+  .card-body {
+    padding: 12px;
+  }
+
+  .card-header h5 {
+    font-size: 1rem;
+  }
+
+  .ptz-container,
+  .movement-container {
+    min-height: 0;
+    padding: 16px 8px;
+  }
+
+  .ptz-controls,
+  .movement-controls {
+    width: min(82vw, 280px);
+    max-width: none !important;
+    gap: 6px !important;
+  }
+
+  .ptz-btn,
+  .movement-btn,
+  .btn-lg.ptz-btn,
+  .btn-lg.movement-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .video-container {
+    min-height: 220px;
+  }
+
+  .card-header.d-flex {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .card-header.d-flex > div {
+    width: 100%;
+    display: flex;
+  }
+
+  .card-header.d-flex .btn {
+    flex: 1;
+    margin-right: 6px !important;
+  }
+
+  .card-header.d-flex .btn:last-child {
+    margin-right: 0 !important;
+  }
 }
